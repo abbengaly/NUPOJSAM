@@ -1,0 +1,271 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: agents
+    description: Security agents
+  - name: schedule
+    description: Monthly duty schedule
+  - name: hours
+    description: Hours bank entries
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /agents:
+    get:
+      operationId: listAgents
+      tags: [agents]
+      summary: List security agents
+      responses:
+        "200":
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agent"
+    post:
+      operationId: createAgent
+      tags: [agents]
+      summary: Create a security agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentInput"
+      responses:
+        "201":
+          description: Created agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+  /agents/{id}:
+    patch:
+      operationId: updateAgent
+      tags: [agents]
+      summary: Update a security agent
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentUpdate"
+      responses:
+        "200":
+          description: Updated agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+    delete:
+      operationId: deleteAgent
+      tags: [agents]
+      summary: Delete a security agent
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Deleted
+  /schedule:
+    get:
+      operationId: listSchedule
+      tags: [schedule]
+      summary: List schedule entries for a month
+      parameters:
+        - in: query
+          name: month
+          required: false
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+      responses:
+        "200":
+          description: Schedule list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduleEntry"
+    post:
+      operationId: createScheduleEntry
+      tags: [schedule]
+      summary: Create a schedule entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleInput"
+      responses:
+        "201":
+          description: Created schedule entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleEntry"
+  /hours:
+    get:
+      operationId: listHours
+      tags: [hours]
+      summary: List hours bank entries
+      responses:
+        "200":
+          description: Hours bank entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HoursEntry"
+    post:
+      operationId: createHoursEntry
+      tags: [hours]
+      summary: Create a hours bank entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HoursInput"
+      responses:
+        "201":
+          description: Created hours entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HoursEntry"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [agents]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+components:
+  parameters:
+    Id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: number
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Agent:
+      type: object
+      required: [id, name, registration, startTime, endTime, onDuty, birthDate, vacation1, vacation2, vacation3, dailyPost]
+      properties:
+        id: { type: number }
+        name: { type: string }
+        registration: { type: string }
+        startTime: { type: string }
+        endTime: { type: string }
+        onDuty: { type: boolean }
+        birthDate: { type: string }
+        vacation1: { type: ["string", "null"] }
+        vacation2: { type: ["string", "null"] }
+        vacation3: { type: ["string", "null"] }
+        dailyPost: { type: string }
+    AgentInput:
+      type: object
+      required: [name, registration, startTime, endTime, onDuty, birthDate, dailyPost]
+      properties:
+        name: { type: string }
+        registration: { type: string }
+        startTime: { type: string }
+        endTime: { type: string }
+        onDuty: { type: boolean }
+        birthDate: { type: string }
+        vacation1: { type: ["string", "null"] }
+        vacation2: { type: ["string", "null"] }
+        vacation3: { type: ["string", "null"] }
+        dailyPost: { type: string }
+    AgentUpdate:
+      allOf:
+        - $ref: "#/components/schemas/AgentInput"
+    ScheduleEntry:
+      type: object
+      required: [id, agentId, agentName, date, shift, post]
+      properties:
+        id: { type: number }
+        agentId: { type: number }
+        agentName: { type: string }
+        date: { type: string }
+        shift: { type: string }
+        post: { type: string }
+        status: { type: string }
+    ScheduleInput:
+      type: object
+      required: [agentId, date, shift, post]
+      properties:
+        agentId: { type: number }
+        date: { type: string }
+        shift: { type: string }
+        post: { type: string }
+    HoursEntry:
+      type: object
+      required: [id, agentId, agentName, date, type, hours, note]
+      properties:
+        id: { type: number }
+        agentId: { type: number }
+        agentName: { type: string }
+        date: { type: string }
+        type: { type: string, enum: [credit, debit] }
+        hours: { type: number }
+        note: { type: string }
+    HoursInput:
+      type: object
+      required: [agentId, date, type, hours, note]
+      properties:
+        agentId: { type: number }
+        date: { type: string }
+        type: { type: string, enum: [credit, debit] }
+        hours: { type: number }
+        note: { type: string }
+    Dashboard:
+      type: object
+      required: [totalAgents, onDuty, vacationSoon, positiveHours, negativeHours, todayPost]
+      properties:
+        totalAgents: { type: number }
+        onDuty: { type: number }
+        vacationSoon: { type: number }
+        positiveHours: { type: number }
+        negativeHours: { type: number }
+        todayPost: { type: string }
+
