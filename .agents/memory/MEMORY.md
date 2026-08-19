@@ -1,0 +1,1 @@
+- [API codegen and Zod compatibility](api-codegen-zod.md) — keep generated numeric schemas compatible with the workspace Zod runtime.
